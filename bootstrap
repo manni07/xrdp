@@ -44,3 +44,32 @@ then
 fi
 
 autoreconf -fvi
+
+patch_darwin_libtool()
+{
+  for libtool_m4 in m4/libtool.m4 libpainter/m4/libtool.m4 librfxcodec/m4/libtool.m4
+  do
+    if test -f "$libtool_m4"
+    then
+      perl -0pi -e 's/for -single_module linker flag/for Darwin single-module linker mode/g' "$libtool_m4"
+    fi
+  done
+
+  for configure in configure libpainter/configure librfxcodec/configure
+  do
+    if test -f "$configure"
+    then
+      perl -0pi -e 's/for -single_module linker flag/for Darwin single-module linker mode/g' "$configure"
+    fi
+  done
+
+  for ltmain in ltmain.sh libpainter/ltmain.sh librfxcodec/ltmain.sh
+  do
+    if test -f "$ltmain"
+    then
+      perl -0pi -e 's/\n\s*func_append compiler_flags " \$wl-dylib_file \$wl\$darwin_install_name:\$depdepl"\n\s*func_append linker_flags " -dylib_file \$darwin_install_name:\$depdepl"/\n                      # Modern Darwin linkers deprecate -dylib_file; rely on explicit dylib paths and -L search paths./g' "$ltmain"
+    fi
+  done
+}
+
+patch_darwin_libtool

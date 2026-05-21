@@ -236,6 +236,7 @@ struct mod
     int allow_client_experiencesettings;
     int perf_settings_override_mask; /* Performance bits overridden in ini file */
     int perf_settings_values_mask; /* Values of overridden performance bits */
+    int ignore_certificate;
     int allow_client_kbd_settings;
     struct kbd_overrides kbd_overrides; /* neutrinordp.overide_kbd_* values */
 };

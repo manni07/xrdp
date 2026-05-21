@@ -58,6 +58,8 @@ int main (void)
     srunner_add_suite(sr, make_suite_test_base64());
     srunner_add_suite(sr, make_suite_test_guid());
     srunner_add_suite(sr, make_suite_test_scancode());
+    srunner_add_suite(sr, make_suite_test_macos_security_trust());
+    srunner_add_suite(sr, make_suite_test_neutrinordp_config());
     srunner_add_suite(sr, make_suite_test_timers());
 
     srunner_set_tap(sr, "-");

@@ -1,7 +1,8 @@
 
 AM_CPPFLAGS = \
   -I$(top_builddir) \
-  -I$(top_srcdir)/common
+  -I$(top_srcdir)/common \
+  -I$(top_srcdir)/neutrinordp
 
 LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
                   $(top_srcdir)/tap-driver.sh
@@ -27,6 +28,8 @@ test_common_SOURCES = \
     test_base64.c \
     test_guid.c \
     test_scancode.c \
+    test_macos_security_trust.c \
+    test_neutrinordp_config.c \
     test_timers.c
 
 test_common_CFLAGS = \

@@ -205,6 +205,23 @@ get_open_fd_count(void)
         ck_abort_msg("Can't create socketpair [%s]", errstr);
     }
 
+#if defined(__APPLE__)
+#define SANE_MAX 100000
+    if (nofile.rlim_cur > SANE_MAX)
+    {
+        nofile.rlim_cur = SANE_MAX;
+    }
+#undef SANE_MAX
+
+    rv = 0;
+    for (i = 0 ; i < nofile.rlim_cur; ++i)
+    {
+        if (g_file_is_open(i))
+        {
+            ++rv;
+        }
+    }
+#else
     struct pollfd *fds =
         (struct pollfd *)g_malloc(sizeof(struct pollfd) * nofile.rlim_cur, 0);
     ck_assert_ptr_nonnull(fds);
@@ -232,6 +249,7 @@ get_open_fd_count(void)
     }
 
     g_free(fds);
+#endif
 
     return rv;
 }

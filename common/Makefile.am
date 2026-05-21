@@ -72,6 +72,8 @@ libcommon_la_SOURCES = \
   set_int.h \
   ssl_calls.c \
   ssl_calls.h \
+  macos_security_trust.c \
+  macos_security_trust.h \
   string_calls.c \
   string_calls.h \
   thread_calls.c \
@@ -86,4 +88,5 @@ libcommon_la_SOURCES = \
 libcommon_la_LIBADD = \
   -lpthread \
   $(OPENSSL_LIBS) \
+  $(MACOS_SECURITY_LIBS) \
   $(DLOPEN_LIBS)

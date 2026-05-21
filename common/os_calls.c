@@ -2430,6 +2430,18 @@ g_get_open_fds(int min, int max)
         // max and min are now both guaranteed to be >= 0
         if (max > min)
         {
+#if defined(__APPLE__)
+            int i;
+
+            for (i = min ; i < max ; ++i)
+            {
+                if (g_file_is_open(i) &&
+                    !list_add_item(result, i))
+                {
+                    goto nomem;
+                }
+            }
+#else
             struct pollfd *fds = g_new0(struct pollfd, max - min);
             int i;
 
@@ -2459,6 +2471,7 @@ g_get_open_fds(int min, int max)
                 }
             }
             g_free(fds);
+#endif
         }
     }
 

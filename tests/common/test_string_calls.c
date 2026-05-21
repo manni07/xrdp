@@ -1089,6 +1089,7 @@ START_TEST(test_sigs__common)
     ck_assert_ptr_eq(res, name);
     ck_assert_str_eq(res, "SIGXFSZ");
 
+#if defined(SIGRTMIN) && defined(SIGRTMAX)
     res = g_sig2text(SIGRTMIN, name);
     ck_assert_ptr_eq(res, name);
     ck_assert_str_eq(res, "SIGRTMIN");
@@ -1100,6 +1101,7 @@ START_TEST(test_sigs__common)
     res = g_sig2text(SIGRTMAX, name);
     ck_assert_ptr_eq(res, name);
     ck_assert_str_eq(res, "SIGRTMAX");
+#endif
 
     // Should be invalid
     res = g_sig2text(0, name);

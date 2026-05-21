@@ -55,9 +55,13 @@ int main (void)
     setvbuf(stdout, NULL, _IONBF, 0);
 
     sr = srunner_create (make_suite_test_bitmap_load());
+#if defined(XRDP_X11)
     srunner_add_suite(sr, make_suite_test_keymap_load());
+#endif
     srunner_add_suite(sr, make_suite_egfx_base_functions());
+#if defined(XRDP_TEST_LD_WRAP)
     srunner_add_suite(sr, make_suite_region());
+#endif
     srunner_add_suite(sr, make_suite_tconfig_load_gfx());
 
     srunner_set_tap(sr, "-");

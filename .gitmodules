@@ -1,11 +1,11 @@
 [submodule "librfxcodec"]
 	path = librfxcodec
-	url = https://github.com/neutrinolabs/librfxcodec.git
+	url = https://github.com/manni07/librfxcodec.git
 	branch = .
 	ignore = untracked
 [submodule "libpainter"]
 	path = libpainter
-	url = https://github.com/neutrinolabs/libpainter.git
+	url = https://github.com/manni07/libpainter.git
 	branch = .
 	ignore = untracked
 [submodule "ulalaca"]

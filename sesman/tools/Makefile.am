@@ -12,9 +12,14 @@ bin_PROGRAMS = \
   xrdp-sesadmin \
   xrdp-dis
 
+if XRDP_X11
 noinst_PROGRAMS = \
   xrdp-authtest \
   xrdp-xcon
+else
+noinst_PROGRAMS = \
+  xrdp-authtest
+endif
 
 xrdp_sesrun_SOURCES = \
   sesrun.c

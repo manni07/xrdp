@@ -13,6 +13,7 @@ libxrdpneutrinordp_la_SOURCES = \
   xrdp-color.c \
   xrdp-color.h \
   xrdp-neutrinordp.c \
+  xrdp-neutrinordp-config.h \
   xrdp-neutrinordp.h
 
 libxrdpneutrinordp_la_LIBADD = \

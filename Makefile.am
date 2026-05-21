@@ -20,6 +20,16 @@ else
 NEUTRINORDPDIR =
 endif
 
+if XRDP_X11
+VNCDIR = vnc
+WAITFORXDIR = waitforx
+GENKEYMAPDIR = genkeymap
+else
+VNCDIR =
+WAITFORXDIR =
+GENKEYMAPDIR =
+endif
+
 if XRDP_XRDPVR
 XRDPVRDIR = xrdpvr
 else
@@ -55,7 +65,7 @@ SUBDIRS = \
   third_party \
   third_party/tomlc99 \
   common \
-  vnc \
+  $(VNCDIR) \
   xup \
   mc \
   $(NEUTRINORDPDIR) \
@@ -67,10 +77,10 @@ SUBDIRS = \
   xrdp \
   fontutils \
   keygen \
-  waitforx \
+  $(WAITFORXDIR) \
   docs \
   instfiles \
-  genkeymap \
+  $(GENKEYMAPDIR) \
   xrdpapi \
   pkgconfig \
   $(XRDPVRDIR) \

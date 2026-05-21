@@ -28,6 +28,7 @@
 #include "string_calls.h"
 #include "trans.h"
 #include "arch.h"
+#include "macos_security_trust.h"
 #include "parse.h"
 #include "ssl_calls.h"
 #include "log.h"
@@ -1046,6 +1047,26 @@ int
 trans_set_tls_mode(struct trans *self, const char *key, const char *cert,
                    long ssl_protocols, const char *tls_ciphers)
 {
+    char trust_error[512];
+    enum macos_security_trust_result trust_result;
+
+    trust_result = macos_security_diagnose_pem_certificate(cert,
+                   trust_error, sizeof(trust_error));
+    if (trust_result == MACOS_SECURITY_TRUST_UNTRUSTED)
+    {
+        LOG(LOG_LEVEL_WARNING,
+            "trans_set_tls_mode: configured TLS certificate is not trusted "
+            "by macOS Security.framework: %s",
+            trust_error);
+    }
+    else if (trust_result == MACOS_SECURITY_TRUST_INVALID)
+    {
+        LOG(LOG_LEVEL_WARNING,
+            "trans_set_tls_mode: could not diagnose configured TLS "
+            "certificate with macOS Security.framework: %s",
+            trust_error);
+    }
+
     self->tls = ssl_tls_create(self, key, cert);
     if (self->tls == NULL)
     {

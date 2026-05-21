@@ -37,22 +37,42 @@ EXTRA_DIST = \
 TESTS = test_xrdp
 check_PROGRAMS = test_xrdp
 
+if MACOS
+test_xrdp_region_sources =
+test_xrdp_wrap_cflags =
+test_xrdp_wrap_ldflags =
+else
+test_xrdp_region_sources = test_xrdp_region.c
+test_xrdp_wrap_cflags = -DXRDP_TEST_LD_WRAP
+test_xrdp_wrap_ldflags = -Wl,--wrap=pixman_region_extents, \
+    -Wl,--wrap=pixman_region_not_empty
+endif
+
+if XRDP_X11
+test_xrdp_keymap_sources = test_xrdp_keymap.c
+test_xrdp_x11_cflags = $(X_CFLAGS)
+else
+test_xrdp_keymap_sources =
+test_xrdp_x11_cflags =
+endif
+
 test_xrdp_SOURCES = \
     test_xrdp.h \
     test_xrdp_main.c \
     test_xrdp_egfx.c \
-    test_xrdp_keymap.c \
-    test_xrdp_region.c \
+    $(test_xrdp_keymap_sources) \
+    $(test_xrdp_region_sources) \
     test_tconfig.c \
     test_bitmap_load.c
 
 test_xrdp_CFLAGS = \
     -D IMAGEDIR=\"$(srcdir)\" \
+    $(test_xrdp_wrap_cflags) \
+    $(test_xrdp_x11_cflags) \
     @CHECK_CFLAGS@ \
     @CMOCKA_CFLAGS@
 
-test_xrdp_LDFLAGS = -Wl,--wrap=pixman_region_extents, \
-    -Wl,--wrap=pixman_region_not_empty
+test_xrdp_LDFLAGS = $(test_xrdp_wrap_ldflags)
 
 test_xrdp_LDADD = \
     $(top_builddir)/xrdp/xrdp_bitmap_load.o \

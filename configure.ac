@@ -7,9 +7,17 @@ AC_CONFIG_HEADERS(config_ac.h:config_ac-h.in)
 AM_INIT_AUTOMAKE([1.7.2 foreign])
 AC_CONFIG_MACRO_DIR([m4])
 AC_USE_SYSTEM_EXTENSIONS
+AC_CANONICAL_HOST
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_LN_S
+
+case $host_os in
+	*darwin*)
+		LT_MULTI_MODULE=${LT_MULTI_MODULE-yes}
+		;;
+esac
+
 LT_INIT
 
 PKG_PROG_PKG_CONFIG
@@ -131,6 +139,53 @@ AC_ARG_ENABLE(neutrinordp, AS_HELP_STRING([--enable-neutrinordp],
               [Build neutrinordp module (default: no)]),
               [], [enable_neutrinordp=no])
 AM_CONDITIONAL(XRDP_NEUTRINORDP, [test x$enable_neutrinordp = xyes])
+
+AC_ARG_ENABLE(x11, AS_HELP_STRING([--disable-x11],
+              [Build without X11-dependent modules and tools (default: yes)]),
+              [], [enable_x11=yes])
+AM_CONDITIONAL(XRDP_X11, [test x$enable_x11 = xyes])
+AS_IF([test "x$enable_x11" = xyes],
+      [AC_DEFINE([XRDP_X11], [1],
+                 [Define to 1 when X11-dependent modules are enabled])])
+
+AC_ARG_ENABLE([macos-frameworks],
+              AS_HELP_STRING([--enable-macos-frameworks@<:@=auto|yes|no@:>@],
+              [Use macOS Security/CoreFoundation framework helpers (default: auto)]),
+              [enable_macos_frameworks=$enableval],
+              [enable_macos_frameworks=auto])
+AS_CASE([$enable_macos_frameworks],
+        [auto], [],
+        [yes], [],
+        [no], [],
+        [AC_MSG_ERROR([--enable-macos-frameworks must be auto, yes or no])])
+have_macos_security=no
+MACOS_SECURITY_LIBS=
+AS_IF([test "x$enable_macos_frameworks" != xno],
+      [AS_IF([test "x$macos" = xyes],
+             [save_LIBS="$LIBS"
+              LIBS="$LIBS -framework Security -framework CoreFoundation"
+              AC_LINK_IFELSE(
+                  [AC_LANG_PROGRAM(
+                      [[#include <Security/Security.h>
+#include <CoreFoundation/CoreFoundation.h>]],
+                      [[SecCertificateRef cert = 0;
+                        if (cert != 0) { CFRelease(cert); }]])],
+                  [have_macos_security=yes
+                   MACOS_SECURITY_LIBS="-framework Security -framework CoreFoundation"],
+                  [have_macos_security=no])
+              LIBS="$save_LIBS"],
+             [AS_IF([test "x$enable_macos_frameworks" = xyes],
+                    [AC_MSG_ERROR([macOS frameworks can only be enabled on Darwin hosts])])])])
+AS_IF([test "x$enable_macos_frameworks" = xyes \
+       && test "x$have_macos_security" != xyes],
+      [AC_MSG_ERROR([Security.framework and CoreFoundation.framework are required])])
+AS_IF([test "x$have_macos_security" = xyes],
+      [AC_DEFINE([XRDP_MACOS_FRAMEWORKS], [1],
+                 [Define to 1 when macOS framework support is enabled])
+       AC_DEFINE([XRDP_MACOS_SECURITY], [1],
+                 [Define to 1 when Security.framework trust helpers are enabled])])
+AM_CONDITIONAL(XRDP_MACOS_SECURITY, [test x$have_macos_security = xyes])
+AC_SUBST([MACOS_SECURITY_LIBS])
 
 AC_ARG_ENABLE(ulalaca, AS_HELP_STRING([--enable-ulalaca],
               [Build ulalaca module (experimental) (default: no)]),
@@ -463,7 +518,11 @@ then
   AC_DEFINE([XRDP_ENABLE_IPV6],1,[Enable IPv6])
 fi
 
-AS_IF( [test "x$enable_neutrinordp" = "xyes"] , [PKG_CHECK_MODULES(FREERDP, freerdp >= 1.0.0)] )
+AS_IF([test "x$enable_neutrinordp" = "xyes"],
+      [PKG_CHECK_MODULES([FREERDP], [freerdp >= 1.0.0], [],
+                         [PKG_CHECK_EXISTS([freerdp5],
+                              [AC_MSG_ERROR([Homebrew FreeRDP was found as freerdp5, but this NeutrinoRDP module currently requires the legacy freerdp.pc API. Install a compatible FreeRDP development package or port NeutrinoRDP to the FreeRDP 5 settings API.])],
+                              [AC_MSG_ERROR([please install FreeRDP development files with freerdp.pc])])])])
 
 # checking for libjpeg
 if test "x$enable_jpeg" = "xyes"
@@ -532,6 +591,9 @@ fi
 
 AM_CONDITIONAL(XRDP_ACCEL, [test x$enable_accel = xyes])
 
+AS_IF([test "x$enable_x11" != xyes && test "x$enable_accel" = xyes],
+      [AC_MSG_ERROR([--enable-accel requires X11; do not combine it with --disable-x11])])
+
 # checking for TurboJPEG
 if test "x$enable_tjpeg" = "xyes"
 then
@@ -562,30 +624,34 @@ else
 fi
 fi
 
-AC_PATH_XTRA
-if test "x$no_x" == "xyes"; then
-  AC_MSG_ERROR([please install libx11-dev or libX11-devel])
-fi
+if test "x$enable_x11" = "xyes"; then
+  AC_PATH_XTRA
+  if test "x$no_x" == "xyes"; then
+    AC_MSG_ERROR([please install libx11-dev or libX11-devel])
+  fi
 
-save_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS $X_CFLAGS"
+  save_CFLAGS="$CFLAGS"
+  CFLAGS="$CFLAGS $X_CFLAGS"
 
-# checking for Xfixes
-AC_CHECK_HEADER([X11/extensions/Xfixes.h], [],
-  [AC_MSG_ERROR([please install libxfixes-dev or libXfixes-devel])],
-  [#include <X11/Xlib.h>])
+  # checking for Xfixes
+  AC_CHECK_HEADER([X11/extensions/Xfixes.h], [],
+    [AC_MSG_ERROR([please install libxfixes-dev or libXfixes-devel])],
+    [#include <X11/Xlib.h>])
 
-# checking for Xrandr
-AC_CHECK_HEADER([X11/extensions/Xrandr.h], [],
-  [AC_MSG_ERROR([please install libxrandr-dev or libXrandr-devel])],
-  [#include <X11/Xlib.h>])
+  # checking for Xrandr
+  AC_CHECK_HEADER([X11/extensions/Xrandr.h], [],
+    [AC_MSG_ERROR([please install libxrandr-dev or libXrandr-devel])],
+    [#include <X11/Xlib.h>])
 
-# checking for XKB
-AC_CHECK_HEADER([X11/extensions/XKBrules.h], [],
-  [AC_MSG_ERROR([please install libxkbfile-dev or libxkbfile-devel])],
-  [#include <X11/Xlib.h>
+  # checking for XKB
+  AC_CHECK_HEADER([X11/extensions/XKBrules.h], [],
+    [AC_MSG_ERROR([please install libxkbfile-dev or libXkbfile-devel])],
+    [#include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include <stdio.h>])
+
+  CFLAGS="$save_CFLAGS"
+fi
 
 if test "x$enable_utmp" = "xyes"
 then
@@ -595,8 +661,6 @@ then
     AXRDP_CHECK_UTMPX_MEMBER_EXISTS([ut_host], [HAVE_UTMPX_UT_HOST])
     AXRDP_CHECK_UTMPX_MEMBER_EXISTS([ut_exit], [HAVE_UTMPX_UT_EXIT])
 fi
-
-CFLAGS="$save_CFLAGS"
 
 # perform unit tests if libcheck and libmocka found
 perform_unit_tests=yes; # Assume packages will be found

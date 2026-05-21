@@ -19,6 +19,8 @@ Suite *make_suite_test_ssl_calls(void);
 Suite *make_suite_test_base64(void);
 Suite *make_suite_test_guid(void);
 Suite *make_suite_test_scancode(void);
+Suite *make_suite_test_macos_security_trust(void);
+Suite *make_suite_test_neutrinordp_config(void);
 Suite *make_suite_test_timers(void);
 
 TCase *make_tcase_test_os_calls_signals(void);

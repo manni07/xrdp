@@ -449,6 +449,13 @@ Normally "evdev" or "base". The default should be correct for your system.
 \fBnormal_frame_interval\fR=\fI<integer>\fR
 [Xorg only] Specify frame capture interval for normal captures in milliseconds.
 
+.TP
+\fBneutrinordp.ignore_certificate\fR=\fI[true|false]\fR
+[NeutrinoRDP only] If set to \fB1\fR, \fBtrue\fR or \fByes\fR, target
+server certificate validation is disabled for NeutrinoRDP proxy
+connections. The default is \fBfalse\fR. Only enable this for legacy
+environments where certificate validation cannot be used.
+
 .SH "EXAMPLES"
 This is an example \fBxrdp.ini\fR:
 

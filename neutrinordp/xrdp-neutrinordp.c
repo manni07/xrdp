@@ -33,6 +33,7 @@
 #endif
 
 #include "xrdp-neutrinordp.h"
+#include "xrdp-neutrinordp-config.h"
 #include "xrdp-color.h"
 #include "xrdp_rail.h"
 #include "trans.h"
@@ -745,6 +746,11 @@ lxrdp_set_param(struct mod *mod, const char *name, const char *value)
         {
             mod->perf_settings_values_mask |= PERF_DISABLE_CURSOR_SHADOW;
         }
+    }
+    else if (neutrinordp_process_config_param(name, value,
+             &mod->ignore_certificate))
+    {
+        /* Parameter handled by neutrinordp_process_config_param() */
     }
     else if (g_strcmp(name, "neutrinordp.allow_client_keyboardLayout") == 0)
     {
@@ -2000,7 +2006,12 @@ lfreerdp_pre_connect(freerdp *instance)
         instance->settings->performance_flags);
 
     instance->settings->compression = 0;
-    instance->settings->ignore_certificate = 1;
+    instance->settings->ignore_certificate = mod->ignore_certificate;
+    if (mod->ignore_certificate)
+    {
+        LOG(LOG_LEVEL_WARNING,
+            "NeutrinoRDP target certificate validation is disabled by configuration");
+    }
 
     // Multi Monitor Settings
     const struct display_size_description *display_sizes =
@@ -2412,8 +2423,28 @@ static boolean
 lfreerdp_verify_certificate(freerdp *instance, char *subject, char *issuer,
                             char *fingerprint)
 {
-    LOG_DEVEL(LOG_LEVEL_DEBUG, "lfreerdp_verify_certificate: - no code here");
-    return 1;
+    struct mod *mod = 0;
+
+    if (instance != 0 && instance->context != 0)
+    {
+        mod = ((struct mod_context *)(instance->context))->modi;
+    }
+
+    if (mod != 0 && mod->ignore_certificate)
+    {
+        LOG(LOG_LEVEL_WARNING,
+            "NeutrinoRDP accepted an untrusted target certificate because "
+            "neutrinordp.ignore_certificate=true");
+        return 1;
+    }
+
+    LOG(LOG_LEVEL_ERROR,
+        "NeutrinoRDP rejected an untrusted target certificate. "
+        "subject='%s' issuer='%s' fingerprint='%s'",
+        subject == 0 ? "" : subject,
+        issuer == 0 ? "" : issuer,
+        fingerprint == 0 ? "" : fingerprint);
+    return 0;
 }
 
 /******************************************************************************/

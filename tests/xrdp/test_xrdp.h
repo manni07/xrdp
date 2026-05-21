@@ -4,9 +4,13 @@
 #include <check.h>
 
 Suite *make_suite_test_bitmap_load(void);
+#if defined(XRDP_X11)
 Suite *make_suite_test_keymap_load(void);
+#endif
 Suite *make_suite_egfx_base_functions(void);
+#if defined(XRDP_TEST_LD_WRAP)
 Suite *make_suite_region(void);
+#endif
 Suite *make_suite_tconfig_load_gfx(void);
 
 #endif /* TEST_XRDP_H */

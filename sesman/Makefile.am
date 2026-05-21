@@ -64,10 +64,16 @@ dist_sesmansysconf_SCRIPTS = \
   startwm.sh \
   reconnectwm.sh
 
+if XRDP_X11
+CHANSRVDIR = chansrv
+else
+CHANSRVDIR =
+endif
+
 SUBDIRS = \
   libsesman \
   sesexec \
   tools \
-  chansrv
+  $(CHANSRVDIR)
 
 CLEANFILES = $(nodist_sesmansysconf_DATA)
