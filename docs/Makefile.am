@@ -1,3 +1,4 @@
 
 SUBDIRS = \
+  manual \
   man
